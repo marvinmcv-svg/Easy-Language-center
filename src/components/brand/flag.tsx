@@ -49,6 +49,7 @@ export function Flag({
 }: FlagProps) {
   const cc = (LANG_TO_COUNTRY[code.toLowerCase()] ?? code.toLowerCase()).replace(
     /[^a-z]/g,
+    "",
   );
   // flagcdn SVGs are crisp at any size
   const src = `https://flagcdn.com/${cc}.svg`;
