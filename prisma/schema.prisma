@@ -1,0 +1,124 @@
+// Prisma schema for Easy Learning Center
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  language    String   // English | Italian | Portuguese | French | German | Spanish | Exam Prep | Counseling
+  title       String
+  level       String?  // e.g. "Nivel 1", "Inicial", "Todos los niveles", "Avanzado"
+  type        String   // private | group | intensive | kids | adults | exam | online | counseling
+  schedule    String?  // e.g. "Martes y Jueves, 7:00 - 9:00 pm"
+  description String?
+  price       String?  // e.g. "1000 Bs/mes"
+  priceNote   String?  // e.g. "20% off early registration"
+  image       String?  // url
+  badge       String?  // e.g. "Más popular", "Nuevo"
+  featured    Boolean  @default(false)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  name           String
+  email          String?
+  phone          String
+  courseInterest String?  // language or course id/title
+  message        String?
+  status         String   @default("new") // new | contacted | enrolled | archived
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?  // e.g. "Estudiante de Inglés"
+  content   String
+  rating    Int      @default(5)
+  image     String?
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Teacher {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?  // e.g. "Profesora de Inglés"
+  bio       String?
+  image     String?
+  languages String?  // comma separated
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  mime      String
+  size      Int
+  alt       String?
+  createdAt DateTime @default(now())
+}
+
+model SiteConfig {
+  id            String   @id @default("singleton")
+  phone         String   @default("+591 77385885")
+  phone2        String   @default("+591 76638081")
+  whatsapp      String   @default("+591 77385885")
+  email         String   @default("info@easylearningcenter.com")
+  address       String   @default("Zona norte, Radial 27, entre 4to y 5to anillo, calle Río Negro #13, Santa Cruz, Bolivia")
+  instagram     String   @default("https://www.instagram.com/easylearningcenterscz/")
+  facebook      String   @default("https://www.facebook.com/EasyLearningSC")
+  tiktok        String   @default("https://www.tiktok.com/@easy.learning.cen")
+  heroTitle     String   @default("Aprende un nuevo idioma hoy")
+  heroSubtitle  String   @default("Clases de inglés, italiano, portugués, francés, alemán y español. Presenciales y virtuales, con profesores calificados y horarios flexibles en Santa Cruz, Bolivia.")
+  mapEmbedUrl   String   @default("https://www.google.com/maps?q=Radial%2027%20Santa%20Cruz%20Bolivia&output=embed")
+  updatedAt     DateTime @updatedAt
+}
+
+// Structured website copy — one row per landing-page section.
+// `data` holds a JSON blob matching that section's schema (see src/lib/content.ts).
+// draft = in-progress edits the owner hasn't pushed live yet.
+// published = what the public site renders.
+model SiteContent {
+  id         String   @id
+  section    String   @unique
+  label      String
+  draft      String
+  published  String
+  updatedAt  DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  entity    String
+  entityId  String?
+  summary   String
+  createdAt DateTime @default(now())
+}
