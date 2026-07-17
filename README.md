@@ -32,25 +32,27 @@ courses, teachers, testimonials, media library, a structured content editor with
 
 ## Getting started
 
+The defaults in `.env.example` work out of the box for local dev.
+
+**macOS / Linux:**
+
 ```bash
-# 1. Install dependencies
-bun install
-
-# 2. Configure environment
 cp .env.example .env
-#   - set DATABASE_URL (see below)
-#   - set AUTH_SECRET   (required in production): openssl rand -hex 32
-
-# 3. Generate the Prisma client and create the database schema
-bun run db:generate
-bun run db:push
-
-# 4. Seed initial data (admin user, courses, content, etc.)
-bun run scripts/seed.ts
-
-# 5. Start the dev server
+bun run setup          # install + prisma generate + db push + seed
 bun run dev            # http://localhost:3000
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+Copy-Item .env.example .env
+bun run setup
+bun run dev            # http://localhost:3000
+```
+
+That's it — open http://localhost:3000. If `localhost` refuses to connect,
+the dev server isn't running: come back to this terminal and re-run
+`bun run dev`.
 
 ### Admin login
 
