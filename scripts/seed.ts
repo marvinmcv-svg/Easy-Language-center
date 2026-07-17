@@ -12,17 +12,20 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   // ---- Admin ----
-  const passwordHash = hashPassword("elc-admin-2026");
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@easylearning.com";
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "elc-admin-2026";
+  const adminName = process.env.ADMIN_NAME ?? "Administrador ELC";
+  const passwordHash = hashPassword(adminPassword);
   await db.admin.upsert({
-    where: { email: "admin@easylearning.com" },
-    update: { passwordHash },
+    where: { email: adminEmail },
+    update: { passwordHash, name: adminName },
     create: {
-      email: "admin@easylearning.com",
-      name: "Administrador ELC",
+      email: adminEmail,
+      name: adminName,
       passwordHash,
     },
   });
-  console.log("✓ Admin user (admin@easylearning.com / elc-admin-2026)");
+  console.log(`✓ Admin user (${adminEmail})`);
 
   // ---- Site config ----
   await db.siteConfig.upsert({

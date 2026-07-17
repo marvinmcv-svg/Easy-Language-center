@@ -387,7 +387,7 @@ function SectionEditor({
               items={local.promos ?? []}
               onChange={(promos) => set({ promos })}
               addLabel="Añadir promoción"
-              newItem={() => ({ title: "", price: "", note: "", features: [], cta: "Más información", highlight: false })}
+              newItem={() => ({ title: "", price: "", note: "", features: [] as string[], cta: "Más información", highlight: false })}
               maxItems={6}
               renderItem={(item: any, update) => (
                 <div className="space-y-2">

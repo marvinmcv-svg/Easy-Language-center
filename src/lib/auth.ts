@@ -4,8 +4,25 @@ import crypto from "crypto";
 export const SESSION_COOKIE = "elc_admin";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-const SECRET =
-  process.env.AUTH_SECRET || "elc-dev-secret-change-me-in-production-please";
+const DEV_SECRET = "elc-dev-secret-change-me-in-production-please";
+
+function resolveSecret(): string {
+  const fromEnv = process.env.AUTH_SECRET?.trim();
+  if (process.env.NODE_ENV === "production") {
+    // Never allow session tokens to be signed with a known/default secret in
+    // production — that would let anyone forge an admin session.
+    if (!fromEnv || fromEnv === DEV_SECRET) {
+      throw new Error(
+        "AUTH_SECRET must be set to a strong, unique value in production. " +
+          "Generate one with `openssl rand -hex 32` and set it in the environment.",
+      );
+    }
+    return fromEnv;
+  }
+  return fromEnv || DEV_SECRET;
+}
+
+const SECRET = resolveSecret();
 
 // ---- Password hashing (scrypt) ----
 export function hashPassword(password: string): string {

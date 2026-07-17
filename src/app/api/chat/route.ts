@@ -1,8 +1,33 @@
 import { NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
 import { db } from "@/lib/db";
 import { getPublishedContent } from "@/lib/get-content";
 import { DEFAULT_CONTACT, LANGUAGES, BRAND } from "@/lib/brand";
+
+type ChatMessage = { role: "assistant" | "user"; content: string };
+
+/**
+ * Generate a reply from whichever AI provider is available.
+ *
+ * The z.ai SDK is imported lazily so the route never hard-fails at module load
+ * when the package/credentials aren't present (e.g. on a generic host). If no
+ * provider is available or configured, this returns `null` and the caller
+ * responds with a warm, on-brand fallback that points users to WhatsApp.
+ */
+async function generateReply(messages: ChatMessage[]): Promise<string | null> {
+  try {
+    const mod = await import("z-ai-web-dev-sdk");
+    const ZAI = mod.default;
+    const zai = await ZAI.create();
+    const completion = await zai.chat.completions.create({
+      messages,
+      thinking: { type: "disabled" },
+    });
+    return completion.choices[0]?.message?.content?.trim() || null;
+  } catch (err) {
+    console.error("[chat] AI provider unavailable:", err);
+    return null;
+  }
+}
 
 // POST /api/chat — Shirley, the AI receptionist for Easy Learning Center.
 // body: { message: string, history?: {role:"user"|"assistant", content:string}[] }
@@ -88,7 +113,7 @@ ${faqText}
 
   // Build messages: system + up to 8 history + new message
   const history = (body.history ?? []).slice(-8);
-  const messages: { role: "assistant" | "user"; content: string }[] = [
+  const messages: ChatMessage[] = [
     { role: "assistant", content: systemPrompt },
     ...history.map((h) => ({
       role: (h.role === "assistant" ? "assistant" : "user") as "assistant" | "user",
@@ -97,29 +122,18 @@ ${faqText}
     { role: "user", content: message },
   ];
 
-  try {
-    const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages,
-      thinking: { type: "disabled" },
-    });
-    const reply = completion.choices[0]?.message?.content?.trim();
-    if (!reply) {
-      return NextResponse.json(
-        { error: "No pude generar una respuesta. Intenta de nuevo." },
-        { status: 502 },
-      );
-    }
+  const reply = await generateReply(messages);
+
+  if (reply) {
     return NextResponse.json({ reply });
-  } catch (err) {
-    console.error("[chat] error", err);
-    return NextResponse.json(
-      {
-        error:
-          "Lo siento, tengo un problema técnico ahora mismo. Escríbenos por WhatsApp al " +
-          contact.whatsapp,
-      },
-      { status: 500 },
-    );
   }
+
+  // No AI provider configured/available — degrade gracefully with a warm,
+  // on-brand reply that keeps the conversation moving toward WhatsApp.
+  return NextResponse.json({
+    reply:
+      `¡Gracias por escribir! 💬 En este momento no puedo responderte por aquí, ` +
+      `pero con gusto te ayudamos al instante por WhatsApp: ${contact.whatsapp}. ` +
+      `También puedes llamarnos al ${contact.phone} o escribirnos a ${contact.email}. ¡Te esperamos! 🎓`,
+  });
 }
